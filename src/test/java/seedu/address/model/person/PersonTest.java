@@ -97,4 +97,12 @@ public class PersonTest {
                 + ", remark=" + ALICE.getRemark() + ", tags=" + ALICE.getTags() + "}";
         assertEquals(expected, ALICE.toString());
     }
+    @Test
+    public void differentRemark_changesEqualityButNotIdentity() {
+        Person changed = new PersonBuilder(ALICE).withRemark("Different note").build();
+        assertFalse(ALICE.equals(changed));
+        assertTrue(ALICE.isSamePerson(changed));
+        assertEquals(changed, new PersonBuilder(changed).build());
+    }
+
 }

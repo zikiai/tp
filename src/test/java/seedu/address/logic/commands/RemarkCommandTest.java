@@ -1,7 +1,13 @@
 package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
+import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
+import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
+import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PERSON;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.nio.file.Files;
@@ -11,6 +17,8 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import seedu.address.commons.core.index.Index;
+import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.model.Model;
@@ -18,6 +26,7 @@ import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.Remark;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.testutil.PersonBuilder;
 
@@ -74,4 +83,58 @@ public class RemarkCommandTest {
         Files.writeString(file, json);
         assertEquals(getTypicalAddressBook(), storage.readAddressBook().orElseThrow());
     }
+    @Test
+    public void execute_validIndex_checksResultAndWholeModel() {
+        Person original = model.getFilteredPersonList().get(0);
+        Person edited = new PersonBuilder(original).withRemark("New note").build();
+        Model expected = new ModelManager(model.getAddressBook(), new UserPrefs());
+        expected.setPerson(original, edited);
+        assertCommandSuccess(new RemarkCommand(INDEX_FIRST_PERSON, new Remark("New note")), model,
+                String.format(RemarkCommand.MESSAGE_ADD_REMARK_SUCCESS, Messages.format(edited)), expected);
+    }
+
+    @Test
+    public void execute_removeRemark_checksResultAndWholeModel() {
+        Person original = model.getFilteredPersonList().get(0);
+        Person withRemark = new PersonBuilder(original).withRemark("Remove me").build();
+        model.setPerson(original, withRemark);
+        Model expected = new ModelManager(model.getAddressBook(), new UserPrefs());
+        expected.setPerson(withRemark, original);
+        assertCommandSuccess(new RemarkCommand(INDEX_FIRST_PERSON, new Remark("")), model,
+                String.format(RemarkCommand.MESSAGE_DELETE_REMARK_SUCCESS, Messages.format(original)), expected);
+    }
+
+    @Test
+    public void execute_invalidIndex_doesNotChangeModel() {
+        Index invalid = Index.fromOneBased(model.getFilteredPersonList().size() + 1);
+        assertCommandFailure(new RemarkCommand(invalid, new Remark("note")), model,
+                Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+    }
+
+    @Test
+    public void execute_invalidFilteredIndex_doesNotChangeModel() {
+        model.updateFilteredPersonList(person -> person.getName().fullName.equals("Benson Meier"));
+        assertCommandFailure(new RemarkCommand(INDEX_SECOND_PERSON, new Remark("note")), model,
+                Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+    }
+
+    @Test
+    public void equals_comparesIndexAndRemark() {
+        RemarkCommand command = new RemarkCommand(INDEX_FIRST_PERSON, new Remark("note"));
+        assertTrue(command.equals(command));
+        assertEquals(command, new RemarkCommand(INDEX_FIRST_PERSON, new Remark("note")));
+        assertFalse(command.equals(null));
+        assertFalse(command.equals("note"));
+        assertFalse(command.equals(new RemarkCommand(INDEX_SECOND_PERSON, new Remark("note"))));
+        assertFalse(command.equals(new RemarkCommand(INDEX_FIRST_PERSON, new Remark("other"))));
+    }
+
+    @Test
+    public void constructorAndExecute_nullArguments_fail() {
+        assertThrows(NullPointerException.class, () -> new RemarkCommand(null, new Remark("")));
+        assertThrows(NullPointerException.class, () -> new RemarkCommand(INDEX_FIRST_PERSON, null));
+        RemarkCommand command = new RemarkCommand(INDEX_FIRST_PERSON, new Remark(""));
+        assertThrows(NullPointerException.class, () -> command.execute(null));
+    }
+
 }
