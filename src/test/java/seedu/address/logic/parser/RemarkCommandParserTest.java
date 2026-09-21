@@ -8,16 +8,17 @@ import org.junit.jupiter.api.Test;
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.RemarkCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.person.Remark;
 
 public class RemarkCommandParserTest {
     private final AddressBookParser parser = new AddressBookParser();
 
     @Test
     public void parseCommand_remark_acceptsTextAndRemoval() throws Exception {
-        assertEquals(new RemarkCommand(Index.fromOneBased(1), "Likes to swim"),
+        assertEquals(new RemarkCommand(Index.fromOneBased(1), new Remark("Likes to swim")),
                 parser.parseCommand("remark 1 r/Likes to swim"));
-        assertEquals(new RemarkCommand(Index.fromOneBased(1), ""), parser.parseCommand("remark 1 r/"));
-        assertEquals(new RemarkCommand(Index.fromOneBased(1), ""), parser.parseCommand("remark 1"));
+        assertEquals(new RemarkCommand(Index.fromOneBased(1), new Remark("")), parser.parseCommand("remark 1 r/"));
+        assertEquals(new RemarkCommand(Index.fromOneBased(1), new Remark("")), parser.parseCommand("remark 1"));
     }
 
     @Test
