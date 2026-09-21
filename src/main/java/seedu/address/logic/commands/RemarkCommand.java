@@ -2,9 +2,13 @@ package seedu.address.logic.commands;
 
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.util.List;
+
 import seedu.address.commons.core.index.Index;
+import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
+import seedu.address.model.person.Person;
 import seedu.address.model.person.Remark;
 
 /**
@@ -44,6 +48,17 @@ public class RemarkCommand extends Command {
 
     @Override
     public CommandResult execute(Model model) throws CommandException {
-        throw new CommandException(String.format("Index: %1$d, Remark: %2$s", index.getOneBased(), remark));
+        requireAllNonNull(model);
+        List<Person> lastShownList = model.getFilteredPersonList();
+        if (index.getZeroBased() >= lastShownList.size()) {
+            throw new CommandException(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        }
+        Person person = lastShownList.get(index.getZeroBased());
+        Person editedPerson = new Person(person.getName(), person.getPhone(), person.getEmail(),
+                person.getAddress(), remark, person.getTags());
+        model.setPerson(person, editedPerson);
+        model.updateFilteredPersonList(Model.PREDICATE_SHOW_ALL_PERSONS);
+        String message = remark.value.isEmpty() ? MESSAGE_DELETE_REMARK_SUCCESS : MESSAGE_ADD_REMARK_SUCCESS;
+        return new CommandResult(String.format(message, Messages.format(editedPerson)));
     }
 }
