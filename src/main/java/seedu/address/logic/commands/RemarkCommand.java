@@ -1,5 +1,8 @@
 package seedu.address.logic.commands;
 
+import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
+
+import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 
@@ -22,8 +25,24 @@ public class RemarkCommand extends Command {
     public static final String MESSAGE_NOT_IMPLEMENTED_YET =
             "Remark command not implemented yet";
 
+    private final Index index;
+    private final String remark;
+
+    /** Creates a command for the person at the given displayed index. */
+    public RemarkCommand(Index index, String remark) {
+        requireAllNonNull(index, remark);
+        this.index = index;
+        this.remark = remark;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        return other == this || (other instanceof RemarkCommand command
+                && index.equals(command.index) && remark.equals(command.remark));
+    }
+
     @Override
     public CommandResult execute(Model model) throws CommandException {
-        throw new CommandException(MESSAGE_NOT_IMPLEMENTED_YET);
+        throw new CommandException(String.format("Index: %1$d, Remark: %2$s", index.getOneBased(), remark));
     }
 }
